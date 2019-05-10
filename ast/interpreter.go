@@ -47,25 +47,29 @@ func (i *Interpreter) Run() Data {
 
 func (i *Interpreter) run() Data {
 	ip := i.IP
-	defer func() {
-		i.IP = ip
-	}()
+	//defer func() {
+	//	i.IP = ip
+	//}()
 
-	// name := i.ast.instName[ip.op]
-	limit := i.ast.instParam[ip.op]
-	opt := i.ast.instOpt[ip.op]
+	//pretty.Println("start", ip.op)
+	//defer func() {
+	//	pretty.Println("finish", ip.op, "with", i.IP.op)
+	//}()
+
 	fn := i.ast.instSet[ip.op]
 	if fn == nil {
 		return ip.data
 	}
 	cs := ip.children
 	l := len(cs)
+	limit := i.ast.instParam[ip.op]
 	if limit != nil &&
 		((limit.Min > -1 && l < limit.Min) ||
 			(limit.Max > -1 && l > limit.Max)) {
+		name := i.ast.instName[ip.op]
 		panic(Interrupt{
 			code: i.ast.innerInterrupt.OverRange,
-			data: "len=" + strconv.Itoa(l) + " over (" + strconv.Itoa(limit.Min) + ".." + strconv.Itoa(limit.Max) + ")",
+			data: name + " len=" + strconv.Itoa(l) + " over (" + strconv.Itoa(limit.Min) + ".." + strconv.Itoa(limit.Max) + ")",
 		})
 	}
 	var d Data
@@ -87,13 +91,17 @@ func (i *Interpreter) run() Data {
 			ip := IP
 			if i.IP.Reset {
 				ds = append(ds, func() Data {
+					backup := i.IP
 					i.IP = ip
+					defer func() { i.IP = backup }()
 					defer i.ast.InterruptHande(nil)
 					return i.run()
 				})
 			} else {
 				ds = append(ds, func() Data {
+					backup := i.IP
 					i.IP = ip
+					defer func() { i.IP = backup }()
 					return i.run()
 				})
 			}
@@ -102,6 +110,7 @@ func (i *Interpreter) run() Data {
 	} else {
 		d = fn()
 	}
+	opt := i.ast.instOpt[ip.op]
 	if opt && i.opt {
 		ip.op = i.ast.CheckType(d)
 		ip.children = nil

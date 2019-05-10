@@ -17,8 +17,8 @@ type CommonScope struct {
 	mutex *sync.Mutex
 }
 
-// MakeScope for Common
-func MakeScope() Scope {
+// NewScope for Common
+func NewScope() Scope {
 	return &CommonScope{
 		mutex: new(sync.Mutex),
 	}

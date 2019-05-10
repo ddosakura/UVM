@@ -38,7 +38,7 @@ func init() {
 	})
 }
 
-func reInitAST(t *testing.T) {
+func reInitAST(ast *AST, t *testing.T) {
 	ast.Interrupt(0, "Type Error", func(e interface{}) interface{} {
 		t.Log("Type Error:", e)
 		return nil
@@ -58,7 +58,7 @@ func reInitAST(t *testing.T) {
 }
 
 func TestAST(t *testing.T) {
-	reInitAST(t)
+	reInitAST(ast, t)
 	root := ast.Root(2)
 
 	a := root.Child(1)
@@ -72,7 +72,7 @@ func TestAST(t *testing.T) {
 }
 
 func TestOpt(t *testing.T) {
-	reInitAST(t)
+	reInitAST(ast, t)
 	root := ast.Root(2)
 
 	a := root.Child(1)
@@ -98,14 +98,14 @@ func TestOpt(t *testing.T) {
 }
 
 func TestStrSaveToInt(t *testing.T) {
-	reInitAST(t)
+	reInitAST(ast, t)
 	root := ast.Root(2)
 
 	a := root.Child(1)
 	a.Child(-1).Data(2)
 	a.Child(-1).Data("H")
 
-	pretty.Println(ast)
+	//pretty.Println(ast)
 
 	interpreter := NewInterpreter(ast)
 

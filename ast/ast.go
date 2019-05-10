@@ -11,7 +11,14 @@ type DelayData func() Data
 type Inst func(...DelayData) Data
 
 // PassInst Do Nothing
-var PassInst = func(...DelayData) Data { return nil }
+var PassInst = func(ds ...DelayData) Data {
+	for _, d := range ds {
+		if d != nil {
+			d()
+		}
+	}
+	return nil
+}
 
 // Data for AST
 type Data interface{}
