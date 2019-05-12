@@ -7,9 +7,11 @@ import (
 
 // VM of state
 type VM struct {
+	mutex   *sync.RWMutex
 	running bool
-	mutex   sync.RWMutex
-	memSize int
+
+	memMutex *sync.RWMutex
+	memSize  int
 
 	mem []byte // 内存
 	ip  int    // 指令计数器
@@ -19,22 +21,26 @@ type VM struct {
 	acc int // 累加寄存器 accumulator
 
 	opName []string
-	opFn   map[byte]InstFn
+	//opArgs map[OpCode]bool
+	opFn map[OpCode]InstFn
 }
 
 // NewVM of state
 func NewVM(memSize int) *VM {
 	return (&VM{
+		mutex:   new(sync.RWMutex),
 		running: false,
 		memSize: memSize,
 	}).initOp()
 }
 
 // MicroInstruction can custom op
-func (v *VM) MicroInstruction(name string, fn InstFn) {
-	code := byte(len(v.opName))
+func (v *VM) MicroInstruction(name string, fn InstFn) OpCode {
+	code := OpCode(len(v.opName))
 	v.opName = append(v.opName, name)
+	//v.opArgs[code] = args
 	v.opFn[code] = fn
+	return code
 }
 
 // Load Mem by addr
@@ -62,15 +68,12 @@ func (v *VM) Store(addr int, data []byte) {
 
 // Start VM
 func (v *VM) Start(sd SD, f, t int) {
-	v.mutex.RLock()
+	v.mutex.Lock()
 	if v.running {
-		v.mutex.RUnlock()
+		v.mutex.Unlock()
 		return
 	}
-	v.mutex.RUnlock()
-	v.mutex.Lock()
 	v.running = true
-	v.mutex.Unlock()
 	v.mem = make([]byte, v.memSize)
 	data := sd.Data(f, t)
 	l := len(data)
@@ -78,6 +81,8 @@ func (v *VM) Start(sd SD, f, t int) {
 		l = v.memSize
 	}
 	copy(v.mem, data[:l])
+	v.memMutex = new(sync.RWMutex)
+	v.mutex.Unlock()
 
 	v.ip = 0
 	v.ir = 0
@@ -93,6 +98,10 @@ func (v *VM) Start(sd SD, f, t int) {
 func (v *VM) Stop() {
 	defer v.mutex.Unlock()
 	v.mutex.Lock()
-	v.running = false
-	fmt.Println("\n---------\nVM Stop")
+	if v.running {
+		v.running = false
+		fmt.Println("\n---------\nVM Stop")
+		return
+	}
+	fmt.Println("VM Stop")
 }
