@@ -3,6 +3,7 @@ package state
 import (
 	"errors"
 	"fmt"
+	"time"
 )
 
 // OpCode for VM
@@ -18,7 +19,7 @@ var (
 
 // Base Op Code
 const (
-	HALT OpCode = iota // 终止
+	NOP OpCode = iota
 
 	INPUT // 存放输入数据到内存
 	PRINT // 输出内存中的数据到屏幕
@@ -35,6 +36,8 @@ const (
 	JS  // 累加寄存器数据为负则转移
 	JNS // 累加寄存器数据为正则转移
 
+	HALT // 终止
+
 	// MUL // 乘法
 	// DIV // 除法
 	// MOD // 求余
@@ -42,7 +45,7 @@ const (
 
 func (v *VM) initOp() *VM {
 	v.opName = []string{
-		"HALT",  // 终止
+		"NOP",
 		"INPUT", // 存放输入数据到内存
 		"PRINT", // 输出内存中的数据到屏幕
 		"LOAD",  // 加载内存数据到累加寄存器
@@ -54,6 +57,7 @@ func (v *VM) initOp() *VM {
 		"JNZ",   // 累加寄存器数据不为tring转移
 		"JS",    // 累加寄存器数据为负tring移
 		"JNS",   // 累加寄存器数据为正则转移
+		"HALT",  // 终止
 	}
 	v.opFn = make(map[OpCode]InstFn)
 	return v
@@ -72,7 +76,7 @@ func (v *VM) run() {
 		// fmt.Println("IR", v.ir)
 		v.ip++
 		switch v.ir {
-		case HALT:
+		case NOP, HALT:
 		case INPUT, PRINT,
 			LOAD, STORE,
 			ADD, SUB,
@@ -84,6 +88,9 @@ func (v *VM) run() {
 			// fmt.Println("OP", v.op)
 		}
 		switch v.ir {
+		case NOP:
+			// fmt.Println("NOP")
+			time.Sleep(1)
 		case HALT:
 			// fmt.Println("HALT", v.ip)
 			v.Stop()

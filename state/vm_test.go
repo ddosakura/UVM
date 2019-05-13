@@ -13,7 +13,8 @@ type sd struct {
 }
 
 func (s *sd) Data(f, t int) []byte {
-	return []byte{
+	bs := make([]byte, 1024)
+	copy(bs, []byte{
 		byte(PRINT), 0, 0, 0x3, 0xf, // 000-0
 		byte(JMP), 0, 0, 0, 30, // 000-5
 		0, 1, 0, 0, // 001-0
@@ -63,11 +64,16 @@ func (s *sd) Data(f, t int) []byte {
 		byte(PRINT), 0, 0, 0, 28,
 		byte(PRINT), 0, 0, 0, 29,
 
-		byte(LOAD), 0, 0, 0, 10,
-		byte(SUB), 0, 0, 0, 14,
-		byte(STORE), 0, 0, 0, 10,
-		byte(JNZ), 0, 0, 0, 30,
-	}
+		// byte(LOAD), 0, 0, 0, 10,
+		// byte(SUB), 0, 0, 0, 14,
+		// byte(STORE), 0, 0, 0, 10,
+		// byte(JNZ), 0, 0, 0, 30,
+	})
+
+	// byte(JMP), 0, 0, 0, 30, // 000-5
+	bs[1009] = byte(JMP)
+	bs[1013] = 30
+	return bs
 }
 
 func TestVM(t *testing.T) {
